@@ -3,23 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>⭐ Star Smash ⭐</title>
-    <link rel="stylesheet" href="style.css">
+
+    <!-- IMPORTANT FOR MOBILE RESPONSIVENESS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
     <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <h1 class="title">⭐ Star Smash ⭐</h1>
+    <!-- GAME CONTAINER ONLY -->
+    <div id="game-container"></div>
 
-    <div id="game-wrapper">
-        <div id="game-scale-wrapper">
-            <div id="game-container"></div>
-        </div>
-    </div>
-
-    <div class="footer">Tap the stars before they hit the danger zone!</div>
-
-    <!-- The path is already correct because style.css & game.js are in the same folder -->
     <script src="game.js"></script>
+
 </body>
 </html>
