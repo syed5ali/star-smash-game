@@ -1,0 +1,39 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #120a20;
+    color: white;
+    font-family: Poppins, sans-serif;
+    text-align: center;
+}
+
+.title {
+    margin-top: 15px;
+    font-size: 32px;
+    text-shadow: 2px 2px 8px black;
+}
+
+#game-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+#game-scale-wrapper {
+    width: 100%;
+    max-width: 360px;
+    position: relative;
+}
+
+#game-container {
+    width: 360px;
+    height: 540px;
+    transform-origin: top left;
+}
+
+.footer {
+    margin-top: 10px;
+    font-size: 18px;
+    color: #d8d8d8;
+}
