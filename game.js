@@ -1,8 +1,11 @@
 var config = {
     type: Phaser.AUTO,
-    width: 360,
-    height: 540,
     parent: "game-container",
+    backgroundColor: "#000",
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     physics: {
         default: "arcade",
         arcade: {
@@ -27,6 +30,8 @@ var timerText;
 var timerEvent;
 
 var gameOver = false;
+var spawnEvent;
+
 var overlay, gameOverPanel, restartButton, earningsText, gameOverText;
 
 function preload() {
@@ -36,60 +41,72 @@ function preload() {
 
 function create() {
 
-    // BACKGROUND
-    let bg = this.add.image(180, 270, "bg");
-    bg.setDisplaySize(360, 540);
+    const width = this.scale.width;
+    const height = this.scale.height;
 
-    // RED DANGER ZONE
-    dangerZone = this.add.rectangle(180, 525, 360, 30, 0xff0000).setDepth(20);
+    // BACKGROUND FULLSCREEN
+    let bg = this.add.image(0, 0, "bg").setOrigin(0);
+    bg.displayWidth = width;
+    bg.displayHeight = height;
+
+    // RED DANGER ZONE (Responsive)
+    dangerZone = this.add.rectangle(
+        width / 2,
+        height - 25,
+        width,
+        40,
+        0xff0000
+    ).setDepth(20);
 
     // SCORE
-    scoreText = this.add.text(10, 10, "Score: 0", {
-        fontSize: "20px",
-        color: "#fff",
+    scoreText = this.add.text(20, 20, "Score: 0", {
+        fontSize: "22px",
+        color: "#ffffff",
         stroke: "#000",
         strokeThickness: 4
     });
 
-    // LIVES
-    livesText = this.add.text(250, 10, "💥💥💥", {
-        fontSize: "26px"
-    });
-
     // TIMER
-    timerText = this.add.text(140, 10, "Time: 20", {
-        fontSize: "20px",
+    timerText = this.add.text(width / 2 - 40, 20, "Time: 20", {
+        fontSize: "22px",
         color: "#ffff55",
         stroke: "#000",
         strokeThickness: 4
     });
 
+    // LIVES
+    livesText = this.add.text(width - 120, 20, "💥💥💥", {
+        fontSize: "24px"
+    });
+
     // STAR GROUP
     stars = this.physics.add.group();
 
-    // ⭐ STAR SPAWNER ⭐
-    this.spawnEvent = this.time.addEvent({
+    // STAR SPAWNER
+    spawnEvent = this.time.addEvent({
         delay: 600,
         loop: true,
         callback: () => {
             if (!gameOver) {
+
                 let star = stars.create(
-                    Phaser.Math.Between(30, 330),
+                    Phaser.Math.Between(30, this.scale.width - 30),
                     -20,
                     "star"
                 );
+
                 star.setScale(0.06);
-                star.setVelocityY(140);
+                star.setVelocityY(150);
                 star.setDepth(10);
 
-                // ENABLE TAP
+                // TAP / CLICK
                 star.setInteractive();
-                star.on("pointerdown", () => smashStar(star));
+                star.on("pointerdown", () => smashStar.call(this, star));
             }
         }
     });
 
-    // ⏳ TIMER EVENT
+    // TIMER EVENT
     timerEvent = this.time.addEvent({
         delay: 1000,
         loop: true,
@@ -98,7 +115,9 @@ function create() {
                 timeLeft--;
                 timerText.setText("Time: " + timeLeft);
 
-                if (timeLeft <= 0) endGame.call(this);
+                if (timeLeft <= 0) {
+                    endGame.call(this);
+                }
             }
         }
     });
@@ -108,17 +127,19 @@ function update() {
 
     if (gameOver) return;
 
-    // STAR MISSED CHECK
     stars.children.iterate(star => {
-        if (star && star.y > 510) {
+
+        if (star && star.y > this.scale.height - 40) {
             star.destroy();
             loseLife.call(this);
         }
-    });
+
+    }, this);
 }
 
-// ⭐ TAP STAR = POINTS
+// SMASH STAR
 function smashStar(star) {
+
     if (gameOver) return;
 
     star.destroy();
@@ -126,54 +147,94 @@ function smashStar(star) {
     scoreText.setText("Score: " + score);
 }
 
-// ❤️ LOSE LIFE
+// LOSE LIFE
 function loseLife() {
+
     lives--;
     livesText.setText("💥".repeat(lives));
 
-    if (lives <= 0) endGame.call(this);
+    if (lives <= 0) {
+        endGame.call(this);
+    }
 }
 
-// 🛑 GAME OVER SCREEN
+// GAME OVER
 function endGame() {
+
     if (gameOver) return;
+
     gameOver = true;
 
-    timerEvent.paused = true;
-    this.spawnEvent.paused = true;
+    spawnEvent.remove(false);
+    timerEvent.remove(false);
 
-    overlay = this.add.rectangle(180, 270, 360, 540, 0x000000, 0.5).setDepth(50);
+    const width = this.scale.width;
+    const height = this.scale.height;
 
-    gameOverPanel = this.add.rectangle(180, 270, 260, 200, 0x000000, 0.85)
-        .setStrokeStyle(3, 0xff3d3d)
-        .setDepth(55)
-        .setOrigin(0.5);
+    // DARK OVERLAY
+    overlay = this.add.rectangle(
+        width / 2,
+        height / 2,
+        width,
+        height,
+        0x000000,
+        0.6
+    ).setDepth(50);
 
-    gameOverText = this.add.text(180, 220, "GAME OVER", {
-        fontSize: "28px",
-        color: "#ff4040",
-        stroke: "#000",
-        strokeThickness: 6
-    }).setDepth(60).setOrigin(0.5);
+    // PANEL
+    gameOverPanel = this.add.rectangle(
+        width / 2,
+        height / 2,
+        width * 0.7,
+        220,
+        0x000000,
+        0.9
+    ).setStrokeStyle(3, 0xff3d3d)
+     .setDepth(55);
 
-    earningsText = this.add.text(180, 260, "Total Score: " + score, {
-        fontSize: "22px",
-        color: "#fff"
-    }).setDepth(60).setOrigin(0.5);
+    // GAME OVER TEXT
+    gameOverText = this.add.text(
+        width / 2,
+        height / 2 - 60,
+        "GAME OVER",
+        {
+            fontSize: "30px",
+            color: "#ff4040",
+            stroke: "#000",
+            strokeThickness: 6
+        }
+    ).setOrigin(0.5).setDepth(60);
 
-    restartButton = this.add.text(180, 310, "Play Again", {
-        fontSize: "22px",
-        backgroundColor: "#ff3d3d",
-        padding: { left: 10, right: 10, top: 5, bottom: 5 },
-        color: "#fff"
-    })
-        .setInteractive()
-        .setDepth(60)
-        .setOrigin(0.5)
-        .on("pointerdown", () => restartGame.call(this));
+    // SCORE
+    earningsText = this.add.text(
+        width / 2,
+        height / 2 - 10,
+        "Total Score: " + score,
+        {
+            fontSize: "22px",
+            color: "#ffffff"
+        }
+    ).setOrigin(0.5).setDepth(60);
+
+    // RESTART BUTTON
+    restartButton = this.add.text(
+        width / 2,
+        height / 2 + 50,
+        "Play Again",
+        {
+            fontSize: "22px",
+            backgroundColor: "#ff3d3d",
+            padding: { left: 15, right: 15, top: 8, bottom: 8 },
+            color: "#fff"
+        }
+    )
+    .setOrigin(0.5)
+    .setDepth(60)
+    .setInteractive()
+    .on("pointerdown", () => restartGame.call(this));
 }
 
-// 🔄 RESTART GAME
+// RESTART
 function restartGame() {
 
     overlay.destroy();
@@ -193,21 +254,41 @@ function restartGame() {
 
     stars.clear(true, true);
 
-    this.spawnEvent.paused = false;
-    timerEvent.paused = false;
+    // Restart events
+    spawnEvent = this.time.addEvent({
+        delay: 600,
+        loop: true,
+        callback: () => {
+            if (!gameOver) {
+
+                let star = stars.create(
+                    Phaser.Math.Between(30, this.scale.width - 30),
+                    -20,
+                    "star"
+                );
+
+                star.setScale(0.06);
+                star.setVelocityY(150);
+                star.setDepth(10);
+
+                star.setInteractive();
+                star.on("pointerdown", () => smashStar.call(this, star));
+            }
+        }
+    });
+
+    timerEvent = this.time.addEvent({
+        delay: 1000,
+        loop: true,
+        callback: () => {
+            if (!gameOver) {
+                timeLeft--;
+                timerText.setText("Time: " + timeLeft);
+
+                if (timeLeft <= 0) {
+                    endGame.call(this);
+                }
+            }
+        }
+    });
 }
-
-// 📱 RESPONSIVE SCALING
-function resizeGame() {
-    const gameContainer = document.getElementById("game-container");
-    const scaleWrapper = document.getElementById("game-scale-wrapper");
-
-    let sw = scaleWrapper.clientWidth;
-    let scale = sw / 360;
-
-    gameContainer.style.transform = "scale(" + scale + ")";
-}
-
-window.addEventListener("resize", resizeGame);
-window.addEventListener("orientationchange", resizeGame);
-setTimeout(resizeGame, 200);
